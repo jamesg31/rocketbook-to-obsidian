@@ -189,7 +189,7 @@ def process_messages():
             os.remove(message_id + '/' + attachment.split(' [')[0] + '.md')
         
         os.removedirs(message_id)
-        conn.store(message['num'], '+FLAGS', '\\Seen')
+        conn.store(num, '+FLAGS', '\\Seen')
         # mark message as read in the mailbox and update the database
         db.execute('UPDATE email SET processed = TRUE WHERE message_id = ?', (message_id,))
         db.commit()
