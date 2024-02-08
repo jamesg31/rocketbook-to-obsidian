@@ -128,11 +128,14 @@ def process_messages():
     conn = ImapConnection(IMAP_SERVER, IMAP_USER, IMAP_PASSWORD)
     # search for unseen messages sent too james+rocketbook@gardna.net
     db = get_db()
-    (retcode, messages) = conn.search(None, '(UNSEEN TO james+rocketbook@gardna.net)')
+    (retcode, messages) = conn.search(None, "(UNSEEN TO 'james+rocketbook@gardna.net')")
     if retcode != 'OK':
         logger.error('Error searching for messages. Retcode: %s' % retcode)
         return
     logger.info('Processing %s new messages' % len(messages[0].split()))
+    logger.info('Messages: %s' % messages[0])
+    logger.info(messages)
+    logger.info(retcode)
     for num in messages[0].split():
         typ, data = conn.fetch(num, '(BODY.PEEK[])')
         mail = email.message_from_bytes(data[0][1])
