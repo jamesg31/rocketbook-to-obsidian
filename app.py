@@ -116,9 +116,11 @@ class ImapConnection:
         (retcode, messages) = self.conn.search(charset, criteria)
         if retcode == 'OK':
             for num in messages[0].split():
-                self.conn.store(num, '+FLAGS', '\\Seen')
                 typ, data = self.conn.fetch(num, '(BODY.PEEK[])')
-                messages.append(email.message_from_bytes(data[0][1]))
+                messages.append({
+                    'num': num,
+                    'data': data
+                })
 
         return messages
     
@@ -135,7 +137,8 @@ def process_messages():
     messages = conn.get_messages(None, '(UNSEEN TO james+rocketbook@gardna.net)')
     logger.info('Processing %s new messages' % len(messages))
     db = get_db()
-    for mail in messages:
+    for message in messages:
+        mail = email.message_from_bytes(message['data'][0][1])
         message_id = mail.get('Message-ID')
         # if message id is already in the database, skip it
         if db.execute('SELECT message_id FROM email WHERE message_id = ?', (message_id,)).fetchone() is not None:
@@ -190,6 +193,7 @@ def process_messages():
             os.remove(message_id + '/' + attachment.split(' [')[0] + '.md')
         
         os.removedirs(message_id)
+        conn.store(message['num'], '+FLAGS', '\\Seen')
         # mark message as read in the mailbox and update the database
         db.execute('UPDATE email SET processed = TRUE WHERE message_id = ?', (message_id,))
         db.commit()
