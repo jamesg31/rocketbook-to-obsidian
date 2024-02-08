@@ -138,7 +138,7 @@ def process_messages():
     logger.info('Processing %s new messages' % len(messages))
     db = get_db()
     for message in messages:
-        mail = email.message_from_bytes(message['data'][0][1])
+        mail = email.message_from_string(message['data'][0][1])
         message_id = mail.get('Message-ID')
         # if message id is already in the database, skip it
         if db.execute('SELECT message_id FROM email WHERE message_id = ?', (message_id,)).fetchone() is not None:
