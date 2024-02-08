@@ -117,6 +117,7 @@ def process_messages():
     conn = ImapConnection(IMAP_SERVER, IMAP_USER, IMAP_PASSWORD)
     # search for unseen messages sent too james+rocketbook@gardna.net
     messages = conn.get_messages(None, '(UNSEEN TO james+rocketbook@gardna.net)')
+    print('Processing %s new messages' % len(list(messages)))
     db = get_db()
     for mail in messages:
         message_id = mail.get('Message-ID')
