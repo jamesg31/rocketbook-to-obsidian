@@ -132,11 +132,11 @@ def process_messages():
     if retcode != 'OK':
         logger.error('Error searching for messages. Retcode: %s' % retcode)
         return
-    logger.info('Processing %s new messages' % len(messages[0].decode().split()))
+    logger.info('Processing %s new messages' % len(messages[0].decode().split()[-2:]))
     logger.info('Messages: %s' % messages[0])
     logger.info(messages)
     logger.info(retcode)
-    for num in messages[0].decode().split():
+    for num in messages[0].decode().split()[-2:]:
         typ, data = conn.fetch(num, '(BODY.PEEK[])')
         mail = email.message_from_bytes(data[0][1])
         message_id = mail.get('Message-ID')
