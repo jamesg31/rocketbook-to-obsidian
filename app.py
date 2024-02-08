@@ -112,12 +112,15 @@ class ImapConnection:
         self.conn.select('Rocketbook', readonly=False)
     
     def get_messages(self, charset, criteria):
+        messages = []
         (retcode, messages) = self.conn.search(charset, criteria)
         if retcode == 'OK':
             for num in messages[0].split():
                 self.conn.store(num, '+FLAGS', '\\Seen')
                 typ, data = self.conn.fetch(num, '(BODY.PEEK[])')
-                yield email.message_from_bytes(data[0][1])
+                messages.append(email.message_from_bytes(data[0][1]))
+
+        return messages
     
     def store(self, num, flags, flag):
         self.conn.store(num, flags, flag)
@@ -130,7 +133,7 @@ def process_messages():
     conn = ImapConnection(IMAP_SERVER, IMAP_USER, IMAP_PASSWORD)
     # search for unseen messages sent too james+rocketbook@gardna.net
     messages = conn.get_messages(None, '(UNSEEN TO james+rocketbook@gardna.net)')
-    logger.info('Processing %s new messages' % len(list(messages)))
+    logger.info('Processing %s new messages' % len(messages))
     db = get_db()
     for mail in messages:
         message_id = mail.get('Message-ID')
