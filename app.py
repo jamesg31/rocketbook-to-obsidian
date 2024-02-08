@@ -138,7 +138,8 @@ def process_messages():
         message_id = mail.get('Message-ID')
         # if message id is already in the database, skip it
         if db.execute('SELECT message_id FROM email WHERE message_id = ?', (message_id,)).fetchone() is not None:
-            logger.info('Message ID %s is already in the database' % message_id)
+            conn.store(num, '+FLAGS', '\\Seen')
+            logger.info('Message ID %s is already in the database, flagging as seen' % message_id)
             continue
 
         # insert message id into database
