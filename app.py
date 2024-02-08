@@ -129,9 +129,10 @@ def process_messages():
     # search for unseen messages sent too james+rocketbook@gardna.net
     db = get_db()
     (retcode, messages) = conn.search(None, '(UNSEEN TO james+rocketbook@gardna.net)')
-    logger.info('Processing %s new messages' % len(messages[0].split()))
     if retcode != 'OK':
+        logger.error('Error searching for messages. Retcode: %s' % retcode)
         return
+    logger.info('Processing %s new messages' % len(messages[0].split()))
     for num in messages[0].split():
         typ, data = conn.fetch(num, '(BODY.PEEK[])')
         mail = email.message_from_bytes(data[0][1])
