@@ -110,22 +110,15 @@ class ImapConnection:
             sys.exit(1)
 
         self.conn.select('Rocketbook', readonly=False)
-    
-    def get_messages(self, charset, criteria):
-        messages = []
-        (retcode, messages) = self.conn.search(charset, criteria)
-        if retcode == 'OK':
-            for num in messages[0].split():
-                typ, data = self.conn.fetch(num, '(BODY.PEEK[])')
-                messages.append({
-                    'num': num,
-                    'data': data
-                })
-
-        return messages
-    
+        
     def store(self, num, flags, flag):
         self.conn.store(num, flags, flag)
+
+    def fetch(self, num, flags):
+        return self.conn.fetch(num, flags)
+    
+    def search(self, charset, criteria):
+        return self.conn.search(charset, criteria)
     
     def close(self):
         self.conn.close()
@@ -134,11 +127,14 @@ def process_messages():
     time.sleep(5)
     conn = ImapConnection(IMAP_SERVER, IMAP_USER, IMAP_PASSWORD)
     # search for unseen messages sent too james+rocketbook@gardna.net
-    messages = conn.get_messages(None, '(UNSEEN TO james+rocketbook@gardna.net)')
-    logger.info('Processing %s new messages' % len(messages))
     db = get_db()
-    for message in messages:
-        mail = email.message_from_string(message['data'][0][1])
+    (retcode, messages) = conn.search(None, '(UNSEEN TO james+rocketbook@gardna.net)')
+    logger.info('Processing %s new messages' % len(messages[0].split()))
+    if retcode != 'OK':
+        return
+    for num in messages[0].split():
+        typ, data = conn.fetch(num, '(BODY.PEEK[])')
+        mail = email.message_from_bytes(data[0][1])
         message_id = mail.get('Message-ID')
         # if message id is already in the database, skip it
         if db.execute('SELECT message_id FROM email WHERE message_id = ?', (message_id,)).fetchone() is not None:
